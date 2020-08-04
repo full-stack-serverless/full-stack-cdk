@@ -54,6 +54,10 @@ export class CdkAppsyncChatStack extends cdk.Stack {
       },
     });
 
+    new cdk.CfnOutput(this, "GraphQLAPIURL", {
+      value: api.graphQlUrl
+    });
+
     const messageTable = new Table(this, 'CDKMessageTable', {
       billingMode: BillingMode.PAY_PER_REQUEST,
       partitionKey: {
