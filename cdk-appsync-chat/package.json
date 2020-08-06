@@ -26,6 +26,7 @@
     "@aws-cdk/aws-dynamodb": "^1.55.0",
     "@aws-cdk/aws-lambda": "^1.55.0",
     "@aws-cdk/core": "^1.55.0",
+    "iam": "^0.1.0",
     "path": "^0.12.7",
     "source-map-support": "^0.5.16"
   }

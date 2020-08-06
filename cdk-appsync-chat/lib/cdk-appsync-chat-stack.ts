@@ -1,7 +1,8 @@
 import * as cdk from '@aws-cdk/core';
 import { UserPool, VerificationEmailStyle, UserPoolClient } from '@aws-cdk/aws-cognito'
-import { GraphQLApi, AuthorizationType, FieldLogLevel, MappingTemplate, PrimaryKey, Values } from '@aws-cdk/aws-appsync'
+import { GraphQLApi, AuthorizationType, FieldLogLevel, MappingTemplate, PrimaryKey, Values, IamResource } from '@aws-cdk/aws-appsync'
 import { AttributeType, BillingMode, Table } from '@aws-cdk/aws-dynamodb';
+import { Role, ServicePrincipal, FederatedPrincipal, Effect, PolicyStatement } from '@aws-cdk/aws-iam'
 import { join } from 'path';
 
 const appName = "cdk-chat-app"
@@ -25,6 +26,8 @@ export class CdkAppsyncChatStack extends cdk.Stack {
     const userPoolClient = new UserPoolClient(this, "UserPoolClient", {
       userPool
     });
+
+
 
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId
@@ -65,6 +68,30 @@ export class CdkAppsyncChatStack extends cdk.Stack {
         type: AttributeType.STRING,
       },
     });
+
+    const messageTableServiceRole = new Role(this, 'MessageTableServiceRole', {
+      assumedBy: new ServicePrincipal('dynamodb.amazonaws.com')
+    });
+    
+    messageTableServiceRole.addToPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        resources: [`${messageTable.tableArn}/index/messages-by-room-id`],
+        actions: [            
+          'dymamodb:Query'
+        ]
+      })
+    );
+    
+    // const mtRole = Role.fromRoleArn(this, 'MTRole', messageTable.tableArn);
+    
+    // let queryIndexPolicy = new PolicyStatement({
+    //   effect: Effect.ALLOW,
+    //   resources: [`${messageTable.tableArn}/index/messages-by-room-id`],
+    //   actions: ['dynamodb:Query']
+    // })
+
+    // mtRole.addToPolicy(queryIndexPolicy)
 
     const roomTable = new Table(this, 'CDKRoomTable', {
       billingMode: BillingMode.PAY_PER_REQUEST,
