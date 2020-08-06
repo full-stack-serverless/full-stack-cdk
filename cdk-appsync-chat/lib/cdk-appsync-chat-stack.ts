@@ -1,5 +1,5 @@
 import * as cdk from '@aws-cdk/core';
-import { UserPool, VerificationEmailStyle, UserPoolClient } from '@aws-cdk/aws-cognito'
+import { UserPool, VerificationEmailStyle, UserPoolClient, AccountRecovery } from '@aws-cdk/aws-cognito'
 import { GraphQLApi, AuthorizationType, FieldLogLevel, MappingTemplate, PrimaryKey, Values, IamResource } from '@aws-cdk/aws-appsync'
 import { AttributeType, BillingMode, Table } from '@aws-cdk/aws-dynamodb';
 import { Role, ServicePrincipal, FederatedPrincipal, Effect, PolicyStatement } from '@aws-cdk/aws-iam'
@@ -13,13 +13,20 @@ export class CdkAppsyncChatStack extends cdk.Stack {
     
     const userPool = new UserPool(this, 'chat-app-user-pool', {
       selfSignUpEnabled: true,
+      accountRecovery: AccountRecovery.PHONE_AND_EMAIL,
       userVerification: {
         emailSubject: 'Please verify your email.',
         emailBody: 'Hello {username}, your verification code is {####}',
         emailStyle: VerificationEmailStyle.CODE
       },
-      signInAliases: {
-        username: true
+      autoVerify: {
+        email: true
+      },
+      standardAttributes: {
+        email: {
+          required: true,
+          mutable: true
+        }
       }
     });
 
@@ -82,16 +89,6 @@ export class CdkAppsyncChatStack extends cdk.Stack {
         ]
       })
     );
-    
-    // const mtRole = Role.fromRoleArn(this, 'MTRole', messageTable.tableArn);
-    
-    // let queryIndexPolicy = new PolicyStatement({
-    //   effect: Effect.ALLOW,
-    //   resources: [`${messageTable.tableArn}/index/messages-by-room-id`],
-    //   actions: ['dynamodb:Query']
-    // })
-
-    // mtRole.addToPolicy(queryIndexPolicy)
 
     const roomTable = new Table(this, 'CDKRoomTable', {
       billingMode: BillingMode.PAY_PER_REQUEST,
@@ -101,13 +98,17 @@ export class CdkAppsyncChatStack extends cdk.Stack {
       },
     });
 
-    // messageTable.addGlobalSecondaryIndex({
-    //   indexName: 'messages-by-room-id',
-    //   partitionKey: {
-    //     name: 'roomId',
-    //     type: AttributeType.STRING
-    //   }
-    // })
+    messageTable.addGlobalSecondaryIndex({
+      indexName: 'messages-by-room-id',
+      partitionKey: {
+        name: 'roomId',
+        type: AttributeType.STRING
+      },
+      sortKey: {
+        name: 'createdAt',
+        type: AttributeType.STRING
+      }
+    })
 
     const messageTableDs = api.addDynamoDbDataSource('Message', 'The messages data source', messageTable);
     const roomTableDs = api.addDynamoDbDataSource('Room', 'The room data source', roomTable);
@@ -229,6 +230,5 @@ export class CdkAppsyncChatStack extends cdk.Stack {
       `),
       responseMappingTemplate: MappingTemplate.dynamoDbResultItem() 
     })
-
   }
 }
