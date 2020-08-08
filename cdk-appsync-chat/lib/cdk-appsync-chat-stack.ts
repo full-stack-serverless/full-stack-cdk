@@ -11,12 +11,12 @@ export class CdkAppsyncChatStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
     
-    const userPool = new UserPool(this, 'chat-app-user-pool', {
+    const userPool = new UserPool(this, 'cdk-chat-app-user-pool', {
       selfSignUpEnabled: true,
       accountRecovery: AccountRecovery.PHONE_AND_EMAIL,
       userVerification: {
         emailSubject: 'Please verify your email.',
-        emailBody: 'Hello {username}, your verification code is {####}',
+        emailBody: 'Hello, your verification code is {####}',
         emailStyle: VerificationEmailStyle.CODE
       },
       autoVerify: {
@@ -33,8 +33,6 @@ export class CdkAppsyncChatStack extends cdk.Stack {
     const userPoolClient = new UserPoolClient(this, "UserPoolClient", {
       userPool
     });
-
-
 
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId

@@ -58,6 +58,8 @@ input RoomInput {
 }
 
 type Subscription {
-  onCreateMessage(roomId: ID): Message
+  onCreateRoom: Room
+    @aws_subscribe(mutations: ["createRoom"])
+  onCreateMessageByRoomId(roomId: ID): Message
     @aws_subscribe(mutations: ["createMessage"])
 }
