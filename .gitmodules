@@ -1,3 +1,0 @@
-[submodule "cdk-appsync-chat/chat-client"]
-	path = cdk-appsync-chat/chat-client
-	url = git@github.com:full-stack-serverless/chat-app.git
